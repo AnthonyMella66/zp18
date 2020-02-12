@@ -16,25 +16,20 @@ public class State
     private Stopwatch timer;
     private float id;
 
-    private void startState(float identity)
+    private void StartState(float identity)
     {
         this.timer.Start();
         this.id = identity;
 
     }
 
-    private void stopState()
+    private string StopState()
     {
         this.timer.Stop();
-        
-
-    }
-    private string output()
-    {
         string output = "State " + this.id + " : " + stopwatch.Elapsed;
         return output;
+
     }
-    
 
     //writing to an output file
     //string[] stateStats = { state1., "Second line", "Third line" };
