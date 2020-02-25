@@ -18,6 +18,8 @@ using Valve.VR;
 * Also defines enums for all tutorial steps, and possible game states.
 */
 public class SimManager : MonoBehaviour {
+    //state variables
+    State state0;
 
     public static string APPLICATION_VERSION  = "2.0";
     public static float UNITY_VIVE_SCALE      = 18.77f;    // Unity units / this value = metres in the physical world
@@ -287,7 +289,7 @@ public class SimManager : MonoBehaviour {
                 this.destAdvancedUIComp.setCurrentWage(currentPayRate);
                 this.destAdvancedUIComp.configure();
                 
-                // Start tutorial
+              
                 Debug.Log("Initializing tutorial.");
                 currentTutorialStep = TutorialStep.BUCKET;
                 bucketMarker.SetActive(true);
@@ -506,6 +508,9 @@ public class SimManager : MonoBehaviour {
     }
 
     public void exitLimbo () {
+
+        //start state 0 here keys
+        state0.startState(0);
         Debug.Log("Exiting limbo state");
         this.currentGameState = GameState.RUNNING;
         if (Array.Exists(this.currentDayImpairments, element => element.getType() == Impairment.ImpairmentType.VISUAL_FOG))
@@ -1314,6 +1319,27 @@ public class SimManager : MonoBehaviour {
                     }
 
                     else {
+                        //keys ending day states
+                        if (currentDay == 1)
+                        {
+                            state1.endState();
+                            state2.startState(2);
+                        }
+                        else if (currentDay == 2)
+                        { 
+                            state2.endState();
+                            state3.startState(3);
+                        }
+                        else if (currentDay == 3)
+                        { 
+                            state3.endState();
+
+                            string[] stateStats = {"Score Processing\n =================". state0.output(), state1.output(), state2.output(), state3.output() };
+                            // WriteAllLines creates a file, writes a collection of strings to the file,
+                            // and then closes the file.  You do NOT need to call Flush() or Close().
+                            System.IO.File.WriteAllLines(@"C:\Users\McDSL Dev\Desktop\Capstone_2019\zp18-master\zp18-master\Unity\simulation_one\stateData.txt", stateStats);
+                        }
+
                         audioManagerComponent.playSound(AudioManager.SoundType.DAY_COMPLETE);
                         Debug.Log("Day " + currentDay + " complete with day time: " + elapsedDayTime);
                         currentGameState = GameState.TRANSITION;
@@ -1429,6 +1455,10 @@ public class SimManager : MonoBehaviour {
                 day0PosA = physicalCamera.transform.position;
                 day0PosB = physicalCamera.transform.position;
                 Debug.Log("Day 0 over " + currentGameState);
+                //end state0 keys
+                state0.endState();
+                state1.startState(1);
+
             }
 
             else {
