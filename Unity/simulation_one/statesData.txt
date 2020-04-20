@@ -1,0 +1,5 @@
+Score Processing
+=================
+~Time measured through each game state~
+
+Time elapsed in State 0 = 00:00:00.0000640
