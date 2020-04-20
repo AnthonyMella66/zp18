@@ -17,10 +17,16 @@ using Valve.VR;
 * 
 * Also defines enums for all tutorial steps, and possible game states.
 */
-public class SimManager : MonoBehaviour {
+public class SimManager : MonoBehaviour
+{
+    //state variables
+    State state0 = new State(0);
+    State state1 = new State(1);
+    State state2 = new State(2);
+    State state3 = new State(3);
 
-    public static string APPLICATION_VERSION  = "2.0";
-    public static float UNITY_VIVE_SCALE      = 18.77f;    // Unity units / this value = metres in the physical world
+    public static string APPLICATION_VERSION = "2.0";
+    public static float UNITY_VIVE_SCALE = 18.77f;    // Unity units / this value = metres in the physical world
 
     public bool persistenceEnabled;
 
@@ -28,34 +34,34 @@ public class SimManager : MonoBehaviour {
     public float fogImpairmentMaxAlpha;     // At 100% strength the fog will be this opaque
     public float fogImpairmentMinAlpha;     // At 0% strength the fog will be this opaque
 
-    private const bool usingConfigFile                  = true;      // Toggles the usage of config files - if false, uses defaults in ConfigParser.cs
-    private const float TRANSITION_TIME                 = 15.0f;     // Duration (seconds) of the transition state
-    private const float DAY_ZERO_MOV_FREQ               = 0.125f;    // Calculate the participant's moving speed in day 0 on this interval for performance
-    private const float COUNTDOWN_THRESHOLD             = 10.0f;     // Start countdown sound effects with this many seconds left
-    private const float CRITICAL_COUNTDOWN              = 5.1f;      // The last x seconds of countdown will have a different tone
-    private const float PERSIST_RATE                    = 1.0f;      // Persist to csv or database every this many seconds
-    private const float PHYSICS_BASE_AMT                = -30.0f;    // Default gravity strength
-    private const float CONTAINER_PLATFORM_SPAWN_X      = 0.0f;      // When the bucket is moved to the wait platform for waiting for treatment
-    private const float CONTAINER_PLATFORM_SPAWN_Y      = 22.93f;
-    private const float CONTAINER_PLATFORM_SPAWN_Z      = -22.05f;
+    private const bool usingConfigFile = true;      // Toggles the usage of config files - if false, uses defaults in ConfigParser.cs
+    private const float TRANSITION_TIME = 15.0f;     // Duration (seconds) of the transition state
+    private const float DAY_ZERO_MOV_FREQ = 0.125f;    // Calculate the participant's moving speed in day 0 on this interval for performance
+    private const float COUNTDOWN_THRESHOLD = 10.0f;     // Start countdown sound effects with this many seconds left
+    private const float CRITICAL_COUNTDOWN = 5.1f;      // The last x seconds of countdown will have a different tone
+    private const float PERSIST_RATE = 1.0f;      // Persist to csv or database every this many seconds
+    private const float PHYSICS_BASE_AMT = -30.0f;    // Default gravity strength
+    private const float CONTAINER_PLATFORM_SPAWN_X = 0.0f;      // When the bucket is moved to the wait platform for waiting for treatment
+    private const float CONTAINER_PLATFORM_SPAWN_Y = 22.93f;
+    private const float CONTAINER_PLATFORM_SPAWN_Z = -22.05f;
 
     // Day Zero-Specific Trackers, etc
-    private int dayZeroCurrentSection                   = ConfigParser.UNIMPAIRED;             // UNIMPAIRED = 0, IMPAIRED = 1 -> the two possible states to be in during the tutorial
-    private float unimpairedDayZeroThreshold            = ConfigParser.DAY_0_DEFAULT_SCORE;    // Score needed to 'pass' day zero - configured through the file otherwise defaulted to 150 (unimpaired)
-    private float impairedDayZeroThreshold              = ConfigParser.DAY_0_DEFAULT_SCORE;    // Score needed to 'pass' day zero - configured through the file otherwise defaulted to 150 (impaired)
-    private const float FILL_BUCKET_TRIGGER_THRESHOLD   = 40.0f;                               // The participant needs to fill their bucket past this level to advance in the tutorial
+    private int dayZeroCurrentSection = ConfigParser.UNIMPAIRED;             // UNIMPAIRED = 0, IMPAIRED = 1 -> the two possible states to be in during the tutorial
+    private float unimpairedDayZeroThreshold = ConfigParser.DAY_0_DEFAULT_SCORE;    // Score needed to 'pass' day zero - configured through the file otherwise defaulted to 150 (unimpaired)
+    private float impairedDayZeroThreshold = ConfigParser.DAY_0_DEFAULT_SCORE;    // Score needed to 'pass' day zero - configured through the file otherwise defaulted to 150 (impaired)
+    private const float FILL_BUCKET_TRIGGER_THRESHOLD = 40.0f;                               // The participant needs to fill their bucket past this level to advance in the tutorial
     private Vector3 posADay0, posBDay0;                                                        // Position tracking for Day 0 average speed tracking
-    private const float WALK_SPEED_FREQ                 = 0.2f;
-    private float speedPenaltyElapsed                   = 0.0f;
-    private float avgWalkingSpeedDay0                   = 0.0f;
-    private float secondsInDay1                         = 0.0f;
-    private bool speedPenaltyFlag                       = false;
-    public bool inDay0SpeedCaptureZone                  = false;
-    private Vector3 day0PosA                            = new Vector3();
-    private Vector3 day0PosB                            = new Vector3();
-    private float dayZeroMovingElapsed                  = 0.0f;
-    public int dayZeroMovingCount                       = 0;                                   // We only want to track position changes inside the 
-       
+    private const float WALK_SPEED_FREQ = 0.2f;
+    private float speedPenaltyElapsed = 0.0f;
+    private float avgWalkingSpeedDay0 = 0.0f;
+    private float secondsInDay1 = 0.0f;
+    private bool speedPenaltyFlag = false;
+    public bool inDay0SpeedCaptureZone = false;
+    private Vector3 day0PosA = new Vector3();
+    private Vector3 day0PosB = new Vector3();
+    private float dayZeroMovingElapsed = 0.0f;
+    public int dayZeroMovingCount = 0;                                   // We only want to track position changes inside the 
+
     /*
     Moving these to config parser to allow for configurable instructions
     */
@@ -100,7 +106,7 @@ public class SimManager : MonoBehaviour {
                         // advanceTutorialStep() method should use this in the editor.
     }
 
-    private float currentScore, dayScore, currentCumulativePayment, elapsedDayTime, elapsedTotalTime, currentDayDuration, 
+    private float currentScore, dayScore, currentCumulativePayment, elapsedDayTime, elapsedTotalTime, currentDayDuration,
                     nextDayDuration, timeWaitedForTreatmentDay, timeWaitedForTreatmentTotal, amountPayedForTreatmentDay,
                     amountPayedForTreatmentTotal, avgSpeedLastSecond, currentPayRate;
 
@@ -108,10 +114,10 @@ public class SimManager : MonoBehaviour {
     private float shakeImpStrCurrent = 0.0f;
     private float shakeImpStrInitial = 0.0f;
     private float speedImpStrCurrent = 0.0f;
-    private float fogImpStrCurrent   = 0.0f;
+    private float fogImpStrCurrent = 0.0f;
 
     // Limbo functionality
-    private Instruction [] limboInstrs;         // Instructions to display during limbo
+    private Instruction[] limboInstrs;         // Instructions to display during limbo
     private int limboIndex;                     // What instruction we're on
     private float limboElapsed;                 // Since last instruction display
 
@@ -120,13 +126,13 @@ public class SimManager : MonoBehaviour {
     private float waitingForTreatmentDuration = 0.0f;
 
     private Vector3 posA, posB;                         // Speed tracking every second using delta distance in scene
-    private int currentDay, totalDays, currentPayload, cumulativePayload, dailyCumulativePayload, cumulativeDelivered, 
+    private int currentDay, totalDays, currentPayload, cumulativePayload, dailyCumulativePayload, cumulativeDelivered,
                     dailyCumulativeDelivered, totalSpilled, todaySpilled;
     private float persistTime = 0.0f;
     private bool paymentEnabled = true;                // Used with the destination limiter. Only pay the user if they're standing close enough
 
     // For countdown sound effects
-    private bool  countdownStarted;
+    private bool countdownStarted;
     private float countDownElapsed;             // Starts from 0, counts up with delta time
     private float countDownRelativeThreshold;   // starts from 1.0, goes up in 1 second increments until threshold - 1
 
@@ -144,7 +150,7 @@ public class SimManager : MonoBehaviour {
     public GameObject instructionManager;
     public GameObject fogImpairmentPanel;
     public GameObject sourceUI;
-    public GameObject destUI;    
+    public GameObject destUI;
     public GameObject WaterDropletCounter;
     public GameObject claustroAssets;           // Enable these if claustrophobic and nausea-sensitive
     public GameObject disableOnClaustro;        // Disable these if claustrophobic and nausea-sensitive
@@ -178,58 +184,64 @@ public class SimManager : MonoBehaviour {
     private GameState currentGameState;
     private TutorialStep currentTutorialStep;
     private DayConfiguration currentDayConfig;
-    private Impairment [] currentDayImpairments = null;
+    private Impairment[] currentDayImpairments = null;
     private Treatment currentDayTreatment;
-    public List <float> earningsByDay = new List <float> ();   // Starting from day 1, track earnings per day
+    public List<float> earningsByDay = new List<float>();   // Starting from day 1, track earnings per day
     private const int EARNINGS_DISPLAY_COUNT = 3;               // Display the X most recent days' earnings
-    
+
 
     /*
     * Initialization method
     * Runs once at scene load
     */
-    void Start () {
+    void Start()
+    {
 
         // Cache necessary components
-        this.audioManagerComponent          = audioManager.GetComponent<AudioManager>();
-        this.leftHandTracker                = leftHandVirtual.GetComponent<HandTracker>();
-        this.rightHandTracker               = rightHandVirtual.GetComponent<HandTracker>();
-        this.flowManagerComponent           = flowManager.GetComponent<FlowManager>();
-        this.pillManagerComponent           = pillManager.GetComponent<PillManager>();
-        this.instructionManagerComponent    = instructionManager.GetComponent<InstructionManager>();
-        this.leftHandScriptComp             = leftHandVirtual.GetComponent<Valve.VR.InteractionSystem.Hand>();
-        this.rightHandScriptComp            = rightHandVirtual.GetComponent<Valve.VR.InteractionSystem.Hand>();
-        this.waterDropletCounterComponent   = WaterDropletCounter.GetComponent<WaterDropletCounter>();
-        this.sourceAdvancedUIComp           = sourceUI.GetComponent<MultiDayUIUpdate>();
-        this.destAdvancedUIComp             = destUI.GetComponent<MultiDayUIUpdate>();
+        this.audioManagerComponent = audioManager.GetComponent<AudioManager>();
+        this.leftHandTracker = leftHandVirtual.GetComponent<HandTracker>();
+        this.rightHandTracker = rightHandVirtual.GetComponent<HandTracker>();
+        this.flowManagerComponent = flowManager.GetComponent<FlowManager>();
+        this.pillManagerComponent = pillManager.GetComponent<PillManager>();
+        this.instructionManagerComponent = instructionManager.GetComponent<InstructionManager>();
+        this.leftHandScriptComp = leftHandVirtual.GetComponent<Valve.VR.InteractionSystem.Hand>();
+        this.rightHandScriptComp = rightHandVirtual.GetComponent<Valve.VR.InteractionSystem.Hand>();
+        this.waterDropletCounterComponent = WaterDropletCounter.GetComponent<WaterDropletCounter>();
+        this.sourceAdvancedUIComp = sourceUI.GetComponent<MultiDayUIUpdate>();
+        this.destAdvancedUIComp = destUI.GetComponent<MultiDayUIUpdate>();
 
         // Prepare for the first day
         resetCountdown();
 
-        if (!establishSimulationParameters()) {
+        if (!establishSimulationParameters())
+        {
             currentGameState = GameState.ERROR;
-            Debug.Log ("Startup error: invalid parameters.");
+            Debug.Log("Startup error: invalid parameters.");
         }
 
-        else {
+        else
+        {
 
             Debug.Log("Initializing persister.");
-            simPersister = new SimPersister (this, this.configParser.dbConn());
+            simPersister = new SimPersister(this, this.configParser.dbConn());
             Debug.Log("Setting days.");
             totalDays = this.configParser.numDays();
-            Debug.Log ("Starting with total days: " + totalDays);
+            Debug.Log("Starting with total days: " + totalDays);
 
-            if (totalDays == -1) {
+            if (totalDays == -1)
+            {
                 currentGameState = GameState.ERROR;
-                Debug.Log ("Startup error: days invalid.");
+                Debug.Log("Startup error: days invalid.");
             }
 
-            else {
+            else
+            {
 
                 // Set up environment parameters - disable exterior components
                 // in order to improve performance if the curtains are drawn. No
                 // point in having trees or grass if they can't see out the window.
-                if (this.configParser.lowNauseaModeEnabled()) {
+                if (this.configParser.lowNauseaModeEnabled())
+                {
 
                     if (this.configParser.claustrophobicModeEnabled())
                     {
@@ -244,36 +256,37 @@ public class SimManager : MonoBehaviour {
                         Destroy(claustroAssets);
                     }
 
-                    foreach (GameObject tree in GameObject.FindGameObjectsWithTag ("Trees")) { Destroy (tree); }
-                    foreach (GameObject extTerr in GameObject.FindGameObjectsWithTag ("ExteriorTerrain")) { Destroy (extTerr); }
+                    foreach (GameObject tree in GameObject.FindGameObjectsWithTag("Trees")) { Destroy(tree); }
+                    foreach (GameObject extTerr in GameObject.FindGameObjectsWithTag("ExteriorTerrain")) { Destroy(extTerr); }
                 }
 
-                else {
+                else
+                {
                     Destroy(claustroAssets);
                     Destroy(curtainLeft);
                     Destroy(curtainRight);
                 }
 
-                totalSpilled                = 0;
-                todaySpilled                = 0;
-                currentDay                  = 0;                    // Training/tutorial day
-                currentPayRate              = 1.0f;                 // Day 0 uses a default rate of $1 per water droplet
-                currentPayload              = 0;                    // Amount of droplets in bucket
-                cumulativePayload           = 0;                    // Amount of droplets ever carried
-                dailyCumulativePayload      = 0;                    // Amount of droplets carried on this day
-                cumulativeDelivered         = 0;                    // Amount of droplets ever successfully delivered
-                dailyCumulativeDelivered    = 0;                    // Amount of droplets successfully delivered on this day
-                currentScore                = 0.0f;                 // Holds across all days except 0, except when paying for treatment or penalized
-                dayScore                    = 0.0f;
-                currentCumulativePayment    = 0.0f;                 // Holds across all days except 0
-                elapsedDayTime              = 0.0f;
-                elapsedTotalTime            = 0.0f;                 // Don't ever reset this
-                currentGameState            = GameState.RUNNING;
+                totalSpilled = 0;
+                todaySpilled = 0;
+                currentDay = 0;                    // Training/tutorial day
+                currentPayRate = 1.0f;                 // Day 0 uses a default rate of $1 per water droplet
+                currentPayload = 0;                    // Amount of droplets in bucket
+                cumulativePayload = 0;                    // Amount of droplets ever carried
+                dailyCumulativePayload = 0;                    // Amount of droplets carried on this day
+                cumulativeDelivered = 0;                    // Amount of droplets ever successfully delivered
+                dailyCumulativeDelivered = 0;                    // Amount of droplets successfully delivered on this day
+                currentScore = 0.0f;                 // Holds across all days except 0, except when paying for treatment or penalized
+                dayScore = 0.0f;
+                currentCumulativePayment = 0.0f;                 // Holds across all days except 0
+                elapsedDayTime = 0.0f;
+                elapsedTotalTime = 0.0f;                 // Don't ever reset this
+                currentGameState = GameState.RUNNING;
 
                 pillManagerComponent.disablePanels();       // There is no treatment/impairment on day 0
-                
+
                 Debug.Log("Starting up " + currentGameState);
-                
+
                 // Set up UIs
                 Debug.Log("Configuring UIs.");
                 this.sourceUI.SetActive(true);
@@ -286,12 +299,20 @@ public class SimManager : MonoBehaviour {
                 this.destAdvancedUIComp.setCurrentDay(0);
                 this.destAdvancedUIComp.setCurrentWage(currentPayRate);
                 this.destAdvancedUIComp.configure();
-                
-                // Start tutorial
+
+
                 Debug.Log("Initializing tutorial.");
                 currentTutorialStep = TutorialStep.BUCKET;
                 bucketMarker.SetActive(true);
                 instructionManagerComponent.setTemporaryMessage(this.configParser.getInstruction(Instruction.InstructionType.DZ_LOCATE_BUCKET));
+
+                //start state 0 here keys
+                state0.StartState();
+                state0.EndState();
+
+                string[] stateStat = { "Score Processing\n=================\n~Time measured through each game state~\n", state0.GetOutput() };
+                System.IO.File.WriteAllLines(@"D:\Users\amell\Documents\school\capstone\zp18\Unity\simulation_one/statesData.txt", stateStat);
+
             }
         }
     }
@@ -302,16 +323,18 @@ public class SimManager : MonoBehaviour {
     * file for this simulation.
     * Returns true on success of all parameters being set, false on any error.
     */
-    private bool establishSimulationParameters () {
+    private bool establishSimulationParameters()
+    {
 
         Debug.Log("Establishing params.");
 
-        if (usingConfigFile) {
+        if (usingConfigFile)
+        {
 
             string configPath = getSimConfigName();
-            Debug.Log ("Using custom parameters: " + configPath);
+            Debug.Log("Using custom parameters: " + configPath);
 
-            this.configParser = new ConfigParser (configPath);
+            this.configParser = new ConfigParser(configPath);
 
             if (!this.configParser.getSimSound())
             {
@@ -334,8 +357,9 @@ public class SimManager : MonoBehaviour {
             return !(this.configParser.getConfigs() == null || this.configParser.getConfigs().Length == 0);
         }
 
-        else {
-            Debug.Log ("No configuration file path supplied.");
+        else
+        {
+            Debug.Log("No configuration file path supplied.");
             return false;
         }
     }
@@ -346,16 +370,17 @@ public class SimManager : MonoBehaviour {
     * into how they're doing. But once the tutorial is done, we need
     * to reset everything to a blank slate for day one.
     */
-    private void resetMetricsForDayOne () {
-        currentScore                = 0.0f;
-        currentCumulativePayment    = 0.0f;
-        elapsedDayTime              = 0.0f;
-        totalSpilled                = 0;
-        todaySpilled                = 0;
-        cumulativePayload           = 0;
-        dailyCumulativePayload      = 0;
-        cumulativeDelivered         = 0;
-        dailyCumulativeDelivered    = 0;
+    private void resetMetricsForDayOne()
+    {
+        currentScore = 0.0f;
+        currentCumulativePayment = 0.0f;
+        elapsedDayTime = 0.0f;
+        totalSpilled = 0;
+        todaySpilled = 0;
+        cumulativePayload = 0;
+        dailyCumulativePayload = 0;
+        cumulativeDelivered = 0;
+        dailyCumulativeDelivered = 0;
     }
 
 
@@ -363,7 +388,8 @@ public class SimManager : MonoBehaviour {
     * Toggles whether or not payment should be allowed
     * for whatever reason.
     */
-    public void togglePayment (bool val) {
+    public void togglePayment(bool val)
+    {
         this.paymentEnabled = val;
     }
 
@@ -372,10 +398,12 @@ public class SimManager : MonoBehaviour {
     * Some drainage objects will increase spill totals if
     * water hits them.
     */
-    public void registerSpill () {
+    public void registerSpill()
+    {
         // Not checking for day 0 because we reset the counters
         // at the start of day 1 in update()
-        if (currentGameState == GameState.RUNNING) {
+        if (currentGameState == GameState.RUNNING)
+        {
             this.totalSpilled++; this.todaySpilled++;
         }
     }
@@ -385,17 +413,20 @@ public class SimManager : MonoBehaviour {
     * Standard reward payment - 1 unit of payment per water droplet
     * colliding with the target drain
     */
-    public void payReward () {
-        if (paymentEnabled && currentGameState == GameState.RUNNING) {
+    public void payReward()
+    {
+        if (paymentEnabled && currentGameState == GameState.RUNNING)
+        {
 
-            this.currentScore               += currentPayRate; 
-            this.currentCumulativePayment   += currentPayRate; 
-            this.dayScore                   += currentPayRate; 
+            this.currentScore += currentPayRate;
+            this.currentCumulativePayment += currentPayRate;
+            this.dayScore += currentPayRate;
 
-            this.dailyCumulativeDelivered   ++; 
-            this.cumulativeDelivered        ++;
+            this.dailyCumulativeDelivered++;
+            this.cumulativeDelivered++;
 
-            if (currentTutorialStep == TutorialStep.POUR_BUCKET) {
+            if (currentTutorialStep == TutorialStep.POUR_BUCKET)
+            {
                 advanceTutorialStep();
             }
         }
@@ -405,56 +436,70 @@ public class SimManager : MonoBehaviour {
     /*
     * General use getters
     */
-    public float getCurrentTreatmentCost () {
+    public float getCurrentTreatmentCost()
+    {
         return (currentDayTreatment == null || currentDayTreatment.hasBeenObtained()) ? -1.0f : currentDayTreatment.currentCost(elapsedDayTime);
     }
 
-    public float getCurrentTreatmentWaitTime () {
+    public float getCurrentTreatmentWaitTime()
+    {
         if (!waitingForTreatment)
             return (currentDayTreatment == null || currentDayTreatment.hasBeenObtained()) ? -1.0f : currentDayTreatment.currentWaitTime(elapsedDayTime);
         else
             return (waitingForTreatmentDuration);
     }
 
-    public float getTotalPaymentReceived () {       // Cumulative amount earned - not affected by deductions through penalizing or payment for treatment
+    public float getTotalPaymentReceived()
+    {       // Cumulative amount earned - not affected by deductions through penalizing or payment for treatment
         return currentCumulativePayment;
     }
 
-    public float getElapsedDayTime () {
+    public float getElapsedDayTime()
+    {
         return elapsedDayTime;
     }
 
-    public float getRemainingDayTime () {
+    public float getRemainingDayTime()
+    {
         return currentGameState == GameState.TRANSITION ? nextDayDuration : (currentDayDuration - elapsedDayTime);
     }
 
-    public float getRemainingTransitionTime () {
+    public float getRemainingTransitionTime()
+    {
         return TRANSITION_TIME - elapsedDayTime;
     }
 
     // Used for detailed transition messages
-    public bool dayHasImpairment (int dayToCheck) {
-        try {
+    public bool dayHasImpairment(int dayToCheck)
+    {
+        try
+        {
             return !(
-                (this.configParser.getConfigs()[dayToCheck - 1].getImpairments() == null) 
-                || 
+                (this.configParser.getConfigs()[dayToCheck - 1].getImpairments() == null)
+                ||
                 (this.configParser.getConfigs()[dayToCheck - 1].getImpairments().Length == 0)
             );
-        } catch (System.Exception e) {
+        }
+        catch (System.Exception e)
+        {
             Debug.Log("*** Day Impairment Check Exception: ***");
             Debug.Log(e);
-        } return false;
+        }
+        return false;
     }
 
-    public int getCurrentDay () {
+    public int getCurrentDay()
+    {
         return currentDay;
     }
 
-    public int getTotalDays () {
+    public int getTotalDays()
+    {
         return totalDays;
     }
 
-    public float getCurrentScore () {        // Not cumulative! This amount will decrease because of penalizing or payment for treatments
+    public float getCurrentScore()
+    {        // Not cumulative! This amount will decrease because of penalizing or payment for treatments
         return currentScore;
     }
 
@@ -463,23 +508,28 @@ public class SimManager : MonoBehaviour {
         return dayScore;
     }
 
-    public bool isComplete () {
+    public bool isComplete()
+    {
         return this.currentGameState == GameState.COMPLETE;
     }
 
-    public GameState currentState () {
+    public GameState currentState()
+    {
         return currentGameState;
     }
 
-    public DayConfiguration getCurrentDayConfiguration () {
+    public DayConfiguration getCurrentDayConfiguration()
+    {
         return this.currentDayConfig;
     }
 
-    public string getSimConfigName () {
+    public string getSimConfigName()
+    {
         return usingConfigFile ? (Application.dataPath + "/InputData/sim_config.txt") : "--";
     }
 
-    public bool isWaitingForTreatment () {
+    public bool isWaitingForTreatment()
+    {
         return this.waitingForTreatment;
     }
 
@@ -491,7 +541,10 @@ public class SimManager : MonoBehaviour {
     * the simulation into limbo until all instructions have been
     * displayed. Then, the simulation can resume.
     */
-    public void limbo (Instruction [] instructionsToDisplay) {
+    public void limbo(Instruction[] instructionsToDisplay)
+    { 
+        
+
         Debug.Log("Entering limbo (function-call exit)");
         this.currentGameState = GameState.LIMBO;
         this.limboInstrs = instructionsToDisplay;
@@ -503,9 +556,14 @@ public class SimManager : MonoBehaviour {
         {
             fogImpairmentPanel.SetActive(false);
         }
+
+       
     }
 
-    public void exitLimbo () {
+    public void exitLimbo()
+    {
+
+   
         Debug.Log("Exiting limbo state");
         this.currentGameState = GameState.RUNNING;
         if (Array.Exists(this.currentDayImpairments, element => element.getType() == Impairment.ImpairmentType.VISUAL_FOG))
@@ -518,45 +576,47 @@ public class SimManager : MonoBehaviour {
     /*
     * Instruction management
     */
-    public void advanceTutorialStep () {
+    public void advanceTutorialStep()
+    {
 
-        switch (currentTutorialStep) {
-            
+        switch (currentTutorialStep)
+        {
+
             case TutorialStep.BUCKET:
                 currentTutorialStep = TutorialStep.HOLD_CONTAINER;
                 instructionManagerComponent.setTemporaryMessage(this.configParser.getInstruction(Instruction.InstructionType.DZ_HOLD_BUCKET));
                 bucketPickUpTrigger.SetActive(true);
                 bucketPickUpTriggerLower.SetActive(true);
                 break;
-            
+
             case TutorialStep.HOLD_CONTAINER:
                 currentTutorialStep = TutorialStep.FILL;
                 instructionManagerComponent.setTemporaryMessage(this.configParser.getInstruction(Instruction.InstructionType.DZ_FILL_BUCKET));
                 break;
-            
+
             case TutorialStep.FILL:
                 currentTutorialStep = TutorialStep.GO_TO_SINK;
                 instructionManagerComponent.setTemporaryMessage(this.configParser.getInstruction(Instruction.InstructionType.DZ_GO_TO_SINK));
                 farSinkMarker.SetActive(true);
                 farSinkTrigger.SetActive(true);
                 break;
-            
+
             case TutorialStep.GO_TO_SINK:
                 currentTutorialStep = TutorialStep.POUR_BUCKET;
                 instructionManagerComponent.setTemporaryMessage(this.configParser.getInstruction(Instruction.InstructionType.DZ_POUR_OUT_BUCKET));
                 break;
-            
+
             case TutorialStep.POUR_BUCKET:
                 currentTutorialStep = TutorialStep.CONTINUE;
                 //continueInstr = new Instruction ("To start the experiment, repeat this\nprocess until you've earned $" + unimpairedDayZeroThreshold.ToString("0.00"), 7.0f);
                 instructionManagerComponent.setTemporaryMessage(this.configParser.getInstruction(Instruction.InstructionType.DZ_OBJECTIVE));
                 break;
-            
+
             case TutorialStep.CONTINUE:
                 Debug.Log("All tutorial steps complete.");
                 currentTutorialStep = TutorialStep.DONE_TUTORIAL;
                 break;
-            
+
             default:
                 Debug.Log("Invalid tutorial step.");
                 break;
@@ -569,8 +629,10 @@ public class SimManager : MonoBehaviour {
     * Sometimes, where multiple triggers are used, we could advance the step
     * twice by accident.
     */
-    public void advanceTutorialStep (TutorialStep stepToAdvanceTo) {
-        if (currentTutorialStep != stepToAdvanceTo) {
+    public void advanceTutorialStep(TutorialStep stepToAdvanceTo)
+    {
+        if (currentTutorialStep != stepToAdvanceTo)
+        {
             advanceTutorialStep();
         }
     }
@@ -579,7 +641,8 @@ public class SimManager : MonoBehaviour {
     /*
     * Hard reset to some value for current amount of water in the bucket.
     */
-    public void setCurrentWaterCarry (int numDrops) {
+    public void setCurrentWaterCarry(int numDrops)
+    {
         this.currentPayload = numDrops;
     }
 
@@ -588,14 +651,16 @@ public class SimManager : MonoBehaviour {
     * When a new drop enters the bucket, we need to keep track of it so
     * that we always know how much they are carrying.
     */
-    public void increasePayload (int amt) {
+    public void increasePayload(int amt)
+    {
 
-        if (currentTutorialStep == TutorialStep.FILL && currentPayload > FILL_BUCKET_TRIGGER_THRESHOLD) {
+        if (currentTutorialStep == TutorialStep.FILL && currentPayload > FILL_BUCKET_TRIGGER_THRESHOLD)
+        {
             advanceTutorialStep();
         }
 
-        this.currentPayload         += amt;
-        this.cumulativePayload      += amt;
+        this.currentPayload += amt;
+        this.cumulativePayload += amt;
         this.dailyCumulativePayload += amt;
     }
 
@@ -604,7 +669,8 @@ public class SimManager : MonoBehaviour {
     * For the speed penalty impairment (and perhaps others) -
     * depreciates the value of the container content by some amount.
     */
-    public void decreasePayload (int amt) {
+    public void decreasePayload(int amt)
+    {
         // Prevent negativity
         this.currentPayload = System.Math.Max(this.currentPayload - amt, 0);
     }
@@ -616,7 +682,8 @@ public class SimManager : MonoBehaviour {
     * simulation startup. Countdown happens in the last
     * few seconds of a given day.
     */
-    private void resetCountdown () {
+    private void resetCountdown()
+    {
         countdownStarted = false;
         countDownElapsed = 0.0f;
         countDownRelativeThreshold = 1.0f;
@@ -630,7 +697,8 @@ public class SimManager : MonoBehaviour {
     * treatment, i.e. pay or wait, as well as how effective the treatment
     * is, etc.
     */
-    public void determinePostTreatmentActions (PillManager.TreatmentObtainType obtainType, float effectiveCost, float effectiveWaitTime) {
+    public void determinePostTreatmentActions(PillManager.TreatmentObtainType obtainType, float effectiveCost, float effectiveWaitTime)
+    {
 
         Debug.Log("Determining post treatment actions.");
 
@@ -638,9 +706,10 @@ public class SimManager : MonoBehaviour {
         bool isEffective = currentDayTreatment.isEffective();
         float effectiveness = currentDayTreatment.getEffectiveness();
 
-        Debug.Log("Obtained, effective: " + isEffective.ToString()  + ", effectiveness: " + effectiveness.ToString());
+        Debug.Log("Obtained, effective: " + isEffective.ToString() + ", effectiveness: " + effectiveness.ToString());
 
-        if (obtainType == PillManager.TreatmentObtainType.PAY) {
+        if (obtainType == PillManager.TreatmentObtainType.PAY)
+        {
 
             Debug.Log("Decrementing score (" + currentScore.ToString() + ") by: " + effectiveCost.ToString());
             currentScore -= effectiveCost;
@@ -650,22 +719,25 @@ public class SimManager : MonoBehaviour {
             amountPayedForTreatmentDay += effectiveCost;
             amountPayedForTreatmentTotal += effectiveCost;
 
-            if (isEffective) {
+            if (isEffective)
+            {
                 Debug.Log("Treatment was effective. Modifying impairment.");
                 audioManagerComponent.playSound(AudioManager.SoundType.TAKE_MEDICINE);
                 modifyImpairmentFactors(effectiveness);
             }
 
-            else {
+            else
+            {
                 // TODO - maybe should have another sound effect to let them know it didnt work
                 // or something else
-                Debug.Log (
+                Debug.Log(
                     "Treatment uneffective."
                 );
             }
         }
 
-        else if (obtainType == PillManager.TreatmentObtainType.WAIT) {
+        else if (obtainType == PillManager.TreatmentObtainType.WAIT)
+        {
 
             Debug.Log("Waiting for treatment started...");
             this.waitingForTreatment = true;
@@ -684,22 +756,22 @@ public class SimManager : MonoBehaviour {
             leftHandScriptComp.enabled = false;
             rightHandScriptComp.enabled = false;
             Debug.Log("Disabling hands: L=" + leftHandScriptComp.enabled + " R=" + rightHandScriptComp.enabled);
-            containerBase.transform.position = new Vector3 (
+            containerBase.transform.position = new Vector3(
                 CONTAINER_PLATFORM_SPAWN_X,
                 CONTAINER_PLATFORM_SPAWN_Y,
                 CONTAINER_PLATFORM_SPAWN_Z
-            ); containerBase.transform.eulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
+            ); containerBase.transform.eulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
 
             // Limbo, display the instructions for how the waiting process is going to work.
             Debug.Log("Initializing limbo for waiting for treatment...");
-            Instruction[] instrs = new Instruction [5];
-            
-            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_CHOSEN_START); 
+            Instruction[] instrs = new Instruction[5];
+
+            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_CHOSEN_START);
             instrs[1] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_CHOSEN_END);
 
-            Instruction cd3 = new Instruction ("Resuming in\n3", 1.0f, true);
-            Instruction cd2 = new Instruction ("Resuming in\n2", 1.0f, true);
-            Instruction cd1 = new Instruction ("Resuming in\n1", 1.0f, true);
+            Instruction cd3 = new Instruction("Resuming in\n3", 1.0f, true);
+            Instruction cd2 = new Instruction("Resuming in\n2", 1.0f, true);
+            Instruction cd1 = new Instruction("Resuming in\n1", 1.0f, true);
             instrs[2] = cd3; instrs[3] = cd2; instrs[4] = cd1;
             limbo(instrs);
         }
@@ -710,7 +782,8 @@ public class SimManager : MonoBehaviour {
     * Returns LEFT or RIGHT or NONE, depending on which hand is
     * holding the given object.
     */
-    public HandTracker.HandSide getHandSideHoldingObj (GameObject obj) {
+    public HandTracker.HandSide getHandSideHoldingObj(GameObject obj)
+    {
         return (leftHandScriptComp.ObjectIsAttached(obj)) ?
             HandTracker.HandSide.LEFT :
             (rightHandScriptComp.ObjectIsAttached(obj) ?
@@ -723,7 +796,8 @@ public class SimManager : MonoBehaviour {
     * Same as above, except returns the corresponding side's hand script. 
     * Returns null if none holding obj.
     */
-    public Valve.VR.InteractionSystem.Hand getHandScriptHoldingObj (GameObject obj) {
+    public Valve.VR.InteractionSystem.Hand getHandScriptHoldingObj(GameObject obj)
+    {
         return (leftHandScriptComp.ObjectIsAttached(obj)) ?
             leftHandScriptComp :
             (rightHandScriptComp.ObjectIsAttached(obj) ?
@@ -736,7 +810,7 @@ public class SimManager : MonoBehaviour {
     * Follows from the above - but actually carries out the changes, once they've been determined. 
     * Only being used for the wait option right now.
     */
-    private void applyPostTreatmentActions ()
+    private void applyPostTreatmentActions()
     {
         bool isEffective = currentDayTreatment.isEffective();
         float effectiveness = currentDayTreatment.getEffectiveness();
@@ -766,25 +840,30 @@ public class SimManager : MonoBehaviour {
     * Modifies strength of impairments on the current day (i.e.
     * after paying / waiting for treatment has been completed)
     */
-    private void modifyImpairmentFactors (float factor) {
+    private void modifyImpairmentFactors(float factor)
+    {
 
         // If factor = 1.0f, then it means remove 100% of the current
         // impairment strengths.
 
-        if (factor >= 1.0f) {
+        if (factor >= 1.0f)
+        {
             unapplyImpairments();
         }
 
-        else {
+        else
+        {
 
             // TODO!!! need to update this to actually work properly for non 1.0f factors
 
-            foreach (Impairment i in this.currentDayImpairments) {
-                switch (i.getType()) {
+            foreach (Impairment i in this.currentDayImpairments)
+            {
+                switch (i.getType())
+                {
                     case Impairment.ImpairmentType.PHYSICAL_SHAKE:
                         rightHandTracker.modifyStrength(factor);
                         leftHandTracker.modifyStrength(factor);
-                        shakeImpStrCurrent  = shakeImpStrCurrent - (shakeImpStrCurrent * factor);
+                        shakeImpStrCurrent = shakeImpStrCurrent - (shakeImpStrCurrent * factor);
                         if (shakeImpStrCurrent < 0.0f) shakeImpStrCurrent = 0.0f;
                         break;
                     case Impairment.ImpairmentType.VISUAL_FOG:
@@ -812,16 +891,19 @@ public class SimManager : MonoBehaviour {
     /*
     * Entirely removes all active impairments for the current day
     */
-    private void unapplyImpairments () {
-        foreach (Impairment i in this.currentDayImpairments) {
-            switch (i.getType()) {
+    private void unapplyImpairments()
+    {
+        foreach (Impairment i in this.currentDayImpairments)
+        {
+            switch (i.getType())
+            {
                 case Impairment.ImpairmentType.PHYSICAL_SHAKE:
                     rightHandTracker.clearImpairment();
                     leftHandTracker.clearImpairment();
                     shakeImpStrCurrent = 0.0f;
                     break;
                 case Impairment.ImpairmentType.PHYSICAL_GRAVITY:
-                    Physics.gravity = new Vector3 (0.0f, PHYSICS_BASE_AMT, 0.0f);
+                    Physics.gravity = new Vector3(0.0f, PHYSICS_BASE_AMT, 0.0f);
                     break;
                 case Impairment.ImpairmentType.VISUAL_FOG:
                     fogImpairmentPanel.SetActive(false);
@@ -840,9 +922,10 @@ public class SimManager : MonoBehaviour {
 
 
     /* Standard distance formula for 3D points */
-    private float distanceBetween (Vector3 a, Vector3 b) {
+    private float distanceBetween(Vector3 a, Vector3 b)
+    {
         return (
-            (float) System.Math.Sqrt (
+            (float)System.Math.Sqrt(
                 System.Math.Pow(b.x - a.x, 2.0) +
                 System.Math.Pow(b.y - a.y, 2.0) +
                 System.Math.Pow(b.z - a.z, 2.0)
@@ -853,8 +936,8 @@ public class SimManager : MonoBehaviour {
     /* Same as above, except only measure lateral distance */
     private float lateralDistanceBetween(Vector3 a, Vector3 b)
     {
-        return ( 
-            (float) System.Math.Sqrt (
+        return (
+            (float)System.Math.Sqrt(
                 System.Math.Pow(b.x - a.x, 2.0) +
                 System.Math.Pow(b.z - a.z, 2.0)
             )
@@ -866,31 +949,35 @@ public class SimManager : MonoBehaviour {
     *
     * Update() is called on every frame
     */
-    void Update () {
+    void Update()
+    {
 
 
         // Quit Application using Esc Key
-        if (Input.GetKey("escape")) {
+        if (Input.GetKey("escape"))
+        {
             Application.Quit();
         }
 
 
         // Global timestamp tracking and data persistence
-        if (currentGameState != GameState.COMPLETE) {
+        if (currentGameState != GameState.COMPLETE)
+        {
 
             elapsedTotalTime += Time.deltaTime;
-            persistTime      += Time.deltaTime;
+            persistTime += Time.deltaTime;
 
 
             // Persist every X second(s)
-            if (persistenceEnabled && persistTime > PERSIST_RATE && currentGameState != GameState.COMPLETE) {
+            if (persistenceEnabled && persistTime > PERSIST_RATE && currentGameState != GameState.COMPLETE)
+            {
 
                 /*
                 Persistence parameter list (ordered):
 
-    	        float 					globalTime,				         // Total simulation runtime (any state)
-    	        int 					currentDay,				
-    	        SimManager.GameState 	currentState,
+           float globalTime,	        // Total simulation runtime (any state)
+           int currentDay,	
+           SimManager.GameState currentState,
                 float                   headsetX,
                 float                   headsetY,
                 float                   headsetZ,
@@ -906,9 +993,9 @@ public class SimManager : MonoBehaviour {
                 float                   bucketX,
                 float                   bucketY,
                 float                   bucketZ,
-                float 					dayTime, 				         // Total day time (running state only)
-    	        float 					totalScore,                      // Includes deductions for payment
-    	        float 					dayScore,                        // Includes deductions for payment
+                float dayTime,         // Total day time (running state only)
+           float totalScore,                      // Includes deductions for payment
+           float dayScore,                        // Includes deductions for payment
                 float                   payRate,                         // How much 1 droplet of water is worth today
                 int                     currentlyCarrying,               // Water droplets inside of the container
                 int                     cumulativeCarrying,              // Amount of water carried total
@@ -932,18 +1019,18 @@ public class SimManager : MonoBehaviour {
 
                 // Get user speed over last second (in meters)
                 posB = physicalCamera.transform.position;
-                avgSpeedLastSecond = lateralDistanceBetween (posA, posB) / UNITY_VIVE_SCALE;
+                avgSpeedLastSecond = lateralDistanceBetween(posA, posB) / UNITY_VIVE_SCALE;
 
-                simPersister.persist (
+                simPersister.persist(
                     elapsedTotalTime,
                     currentDay,
                     currentGameState,
                     physicalCamera.transform.position.x / UNITY_VIVE_SCALE,
                     physicalCamera.transform.position.y / UNITY_VIVE_SCALE,
                     physicalCamera.transform.position.z / UNITY_VIVE_SCALE,
-                    (int) (physicalCamera.transform.rotation.x * 100),
-                    (int) (physicalCamera.transform.rotation.y * 100),
-                    (int) (physicalCamera.transform.rotation.z * 100),
+                    (int)(physicalCamera.transform.rotation.x * 100),
+                    (int)(physicalCamera.transform.rotation.y * 100),
+                    (int)(physicalCamera.transform.rotation.z * 100),
                     leftHandVirtual.transform.position.x / UNITY_VIVE_SCALE,
                     leftHandVirtual.transform.position.y / UNITY_VIVE_SCALE,
                     leftHandVirtual.transform.position.z / UNITY_VIVE_SCALE,
@@ -954,8 +1041,8 @@ public class SimManager : MonoBehaviour {
                     containerBase.transform.position.y / UNITY_VIVE_SCALE,
                     containerBase.transform.position.z / UNITY_VIVE_SCALE,
                     elapsedDayTime,
-                    currentScore,       
-                    dayScore,   
+                    currentScore,
+                    dayScore,
                     currentPayRate,
                     currentPayload,
                     cumulativePayload,
@@ -987,7 +1074,8 @@ public class SimManager : MonoBehaviour {
         * State Management
         *
         */
-        if (currentGameState == GameState.COMPLETE) {
+        if (currentGameState == GameState.COMPLETE)
+        {
 
             // TODO - anything else needed here?
             int a = 1;
@@ -995,26 +1083,31 @@ public class SimManager : MonoBehaviour {
         }
 
 
-        else if (currentGameState == GameState.LIMBO) {
+        else if (currentGameState == GameState.LIMBO)
+        {
 
             limboElapsed += Time.deltaTime;
 
-            if (limboElapsed > limboInstrs[limboIndex].displayDuration) {
+            if (limboElapsed > limboInstrs[limboIndex].displayDuration)
+            {
                 limboIndex++;
                 limboElapsed = 0.0f;
 
-                if (limboIndex == limboInstrs.Length) {
+                if (limboIndex == limboInstrs.Length)
+                {
                     Debug.Log("Iterated through all limbo instructions.");
                     exitLimbo();
-                    audioManagerComponent.playSound(AudioManager.SoundType.START_DAY);     
-                    flowManagerComponent.startFlow();     
-                } 
+                    audioManagerComponent.playSound(AudioManager.SoundType.START_DAY);
+                    flowManagerComponent.startFlow();
+                }
 
-                else {
+                else
+                {
                     this.instructionManagerComponent.setTemporaryMessage(limboInstrs[limboIndex]);
 
                     // Adding the ability to play a sound for desired instructions (i.e. countdown)
-                    if (limboInstrs[limboIndex].playSoundAtStart) {
+                    if (limboInstrs[limboIndex].playSoundAtStart)
+                    {
                         this.audioManagerComponent.playSound(AudioManager.SoundType.CRITICAL_TICK);
                     }
                 }
@@ -1022,7 +1115,8 @@ public class SimManager : MonoBehaviour {
         }
 
 
-        else if (currentGameState == GameState.ERROR || this.configParser.getConfigs() == null) {
+        else if (currentGameState == GameState.ERROR || this.configParser.getConfigs() == null)
+        {
 
             // TODO - should put a red haze into the headset or
             // something with the error message in the middle
@@ -1030,21 +1124,25 @@ public class SimManager : MonoBehaviour {
         }
 
 
-        else if (currentGameState == GameState.PAUSED) {
+        else if (currentGameState == GameState.PAUSED)
+        {
 
             // TODO - anything else needed here?
             int a = 1;
         }
 
 
-        else if (currentGameState == GameState.TRANSITION) {
+        else if (currentGameState == GameState.TRANSITION)
+        {
 
             elapsedDayTime += Time.deltaTime;
 
-            if (elapsedDayTime > TRANSITION_TIME) {
+            if (elapsedDayTime > TRANSITION_TIME)
+            {
 
                 // Track each day's earnings
-                if (currentDay > 0) {
+                if (currentDay > 0)
+                {
                     earningsByDay.Add(dayScore);
                 }
 
@@ -1059,10 +1157,11 @@ public class SimManager : MonoBehaviour {
                 speedPenaltyElapsed = 0.0f;
                 speedPenaltyFlag = false;
                 fogImpairmentPanel.SetActive(false);
-                Debug.Log ("New day: " + currentDay);
+                Debug.Log("New day: " + currentDay);
 
                 // Set up the next day here
-                if (currentDay <= this.configParser.numDays()) {
+                if (currentDay <= this.configParser.numDays())
+                {
 
                     // Establish key parameters from the day configuration object
                     currentDayConfig = configParser.getConfigs()[currentDay - 1];
@@ -1070,9 +1169,12 @@ public class SimManager : MonoBehaviour {
                     currentPayRate = currentDayConfig.getRewardMultiplier();
                     Debug.Log("Next day config loaded.");
 
-                    if (currentDay != this.configParser.numDays()) {
+                    if (currentDay != this.configParser.numDays())
+                    {
                         nextDayDuration = configParser.getConfigs()[currentDay].getDuration();
-                    } else {
+                    }
+                    else
+                    {
                         nextDayDuration = 0.0f;
                     }
 
@@ -1082,12 +1184,15 @@ public class SimManager : MonoBehaviour {
                     shakeImpStrCurrent = 0.0f;
                     shakeImpStrInitial = 0.0f;
                     speedImpStrCurrent = 0.0f;
-                    fogImpStrCurrent   = 0.0f;
+                    fogImpStrCurrent = 0.0f;
 
-                    if ((currentDayImpairments = currentDayConfig.getImpairments()) != null && currentDayImpairments.Length > 0) {
-                        foreach (Impairment imp in currentDayImpairments) {
+                    if ((currentDayImpairments = currentDayConfig.getImpairments()) != null && currentDayImpairments.Length > 0)
+                    {
+                        foreach (Impairment imp in currentDayImpairments)
+                        {
                             float str = imp.getStrength();
-                            switch (imp.getType()) {
+                            switch (imp.getType())
+                            {
                                 case Impairment.ImpairmentType.PHYSICAL_SHAKE:
                                     rightHandTracker.applyImpairment(str);
                                     leftHandTracker.applyImpairment(str);
@@ -1105,11 +1210,13 @@ public class SimManager : MonoBehaviour {
                                     break;
                             }
                         }
-                    } Debug.Log("Next day impairments loaded.");
+                    }
+                    Debug.Log("Next day impairments loaded.");
 
 
                     // Set up the treatment station if there should be treatments available
-                    if ((currentDayTreatment = currentDayConfig.getTreatment()) != null) {
+                    if ((currentDayTreatment = currentDayConfig.getTreatment()) != null)
+                    {
 
                         // Now updates acccording to the conditionals below
                         // pillManagerComponent.activatePanels();
@@ -1123,60 +1230,60 @@ public class SimManager : MonoBehaviour {
                         {
                             pillManagerComponent.activatePanels(); // Activates both sets of panels/pills, etc
                             Debug.Log("Initializing limbo for pay&wait treatment...");
-                            Instruction [] instrs = new Instruction [8];
+                            Instruction[] instrs = new Instruction[8];
 
                             // Adding 3-second countdown to end of treatment instructions
-                            Instruction countDownInstrOne   = new Instruction ("Resuming in:\n3", 1.0f, true);
-                            Instruction countDownInstrTwo   = new Instruction ("Resuming in:\n2", 1.0f, true);
-                            Instruction countDownInstrThree = new Instruction ("Resuming in:\n1", 1.0f, true);
+                            Instruction countDownInstrOne = new Instruction("Resuming in:\n3", 1.0f, true);
+                            Instruction countDownInstrTwo = new Instruction("Resuming in:\n2", 1.0f, true);
+                            Instruction countDownInstrThree = new Instruction("Resuming in:\n1", 1.0f, true);
 
                             // Moving all of these to config parser to allow them to be customized
-                            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_LOCATE_STATION); 
-                            instrs[1] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_METHOD); 
-                            instrs[2] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_PAY_OPTION); 
-                            instrs[3] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_WAIT_OPTION); 
+                            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_LOCATE_STATION);
+                            instrs[1] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_METHOD);
+                            instrs[2] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_PAY_OPTION);
+                            instrs[3] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_WAIT_OPTION);
                             instrs[4] = this.configParser.getInstruction(Instruction.InstructionType.TMT_HYBRID_ENDING);
 
                             instrs[5] = countDownInstrOne; instrs[6] = countDownInstrTwo; instrs[7] = countDownInstrThree;
-                            limbo (instrs);
-                        } 
+                            limbo(instrs);
+                        }
 
                         else if (hasPay)
                         {
                             pillManagerComponent.activatePanel(PillManager.TreatmentObtainType.PAY);
                             Debug.Log("Initializing limbo for pay-only treatment...");
-                            Instruction[] instrs = new Instruction [6];
-      
-                            // Adding 3-second countdown to end of treatment instructions
-                            Instruction countDownInstrOne   = new Instruction ("Resuming in:\n3", 1.0f, true);
-                            Instruction countDownInstrTwo   = new Instruction ("Resuming in:\n2", 1.0f, true);
-                            Instruction countDownInstrThree = new Instruction ("Resuming in:\n1", 1.0f, true);
+                            Instruction[] instrs = new Instruction[6];
 
-                            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_PAY_LOCATE_STATION); 
+                            // Adding 3-second countdown to end of treatment instructions
+                            Instruction countDownInstrOne = new Instruction("Resuming in:\n3", 1.0f, true);
+                            Instruction countDownInstrTwo = new Instruction("Resuming in:\n2", 1.0f, true);
+                            Instruction countDownInstrThree = new Instruction("Resuming in:\n1", 1.0f, true);
+
+                            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_PAY_LOCATE_STATION);
                             instrs[1] = this.configParser.getInstruction(Instruction.InstructionType.TMT_PAY_METHOD);
                             instrs[2] = this.configParser.getInstruction(Instruction.InstructionType.TMT_PAY_ENDING);
 
                             instrs[3] = countDownInstrOne; instrs[4] = countDownInstrTwo; instrs[5] = countDownInstrThree;
-                            limbo (instrs);
+                            limbo(instrs);
                         }
 
                         else if (hasWait)
                         {
                             pillManagerComponent.activatePanel(PillManager.TreatmentObtainType.WAIT);
                             Debug.Log("Initializing limbo for wait-only treatment...");
-                            Instruction[] instrs = new Instruction [6];
-                            
-                            // Adding 3-second countdown to end of treatment instructions
-                            Instruction countDownInstrOne   = new Instruction ("Resuming in:\n3", 1.0f, true);
-                            Instruction countDownInstrTwo   = new Instruction ("Resuming in:\n2", 1.0f, true);
-                            Instruction countDownInstrThree = new Instruction ("Resuming in:\n1", 1.0f, true);
+                            Instruction[] instrs = new Instruction[6];
 
-                            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_LOCATE_STATION); 
+                            // Adding 3-second countdown to end of treatment instructions
+                            Instruction countDownInstrOne = new Instruction("Resuming in:\n3", 1.0f, true);
+                            Instruction countDownInstrTwo = new Instruction("Resuming in:\n2", 1.0f, true);
+                            Instruction countDownInstrThree = new Instruction("Resuming in:\n1", 1.0f, true);
+
+                            instrs[0] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_LOCATE_STATION);
                             instrs[1] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_METHOD);
                             instrs[2] = this.configParser.getInstruction(Instruction.InstructionType.TMT_WAIT_ENDING);
 
                             instrs[3] = countDownInstrOne; instrs[4] = countDownInstrTwo; instrs[5] = countDownInstrThree;
-                            limbo (instrs);
+                            limbo(instrs);
                         }
 
                         else Debug.Log("No treatment options found. Not displaying instruction message.");
@@ -1190,7 +1297,8 @@ public class SimManager : MonoBehaviour {
                     this.destAdvancedUIComp.setCurrentDay(currentDay);
                     this.destAdvancedUIComp.setCurrentWage(currentPayRate);
 
-                    if (currentGameState != GameState.LIMBO) {
+                    if (currentGameState != GameState.LIMBO)
+                    {
                         // Reset simulation parameters and play effects
                         currentGameState = GameState.RUNNING;
                         elapsedDayTime = 0.0f;
@@ -1199,7 +1307,9 @@ public class SimManager : MonoBehaviour {
                         audioManagerComponent.playSound(AudioManager.SoundType.START_DAY);      // On days with limbo, these two lines
                         flowManagerComponent.startFlow();                                       // need to be done elsewhere
                         Debug.Log("Starting day " + currentGameState);
-                    } else {
+                    }
+                    else
+                    {
                         elapsedDayTime = 0.0f;
                         Debug.Log("Preparing to start day with limbo enabled at start.");
                         transitionOverlay.SetActive(false);
@@ -1210,7 +1320,8 @@ public class SimManager : MonoBehaviour {
         }
 
 
-        else {
+        else
+        {
 
             /*
             * Standard day state tracking
@@ -1218,16 +1329,19 @@ public class SimManager : MonoBehaviour {
             *   - Watch for duration expiry and transition to next day
             *     when needed
             */
-            if (currentDay > 0) {
-                
-                if (speedPenaltyFlag && currentPayload > 0 && speedPenaltyElapsed > WALK_SPEED_FREQ) {
+            if (currentDay > 0)
+            {
+
+                if (speedPenaltyFlag && currentPayload > 0 && speedPenaltyElapsed > WALK_SPEED_FREQ)
+                {
 
                     // Speed tracking
                     day0PosB = physicalCamera.transform.position;
-                    float walkSpd = lateralDistanceBetween (day0PosA, day0PosB) / WALK_SPEED_FREQ;
+                    float walkSpd = lateralDistanceBetween(day0PosA, day0PosB) / WALK_SPEED_FREQ;
 
                     // Penalizing, if speed limit breached
-                    if ((walkSpd > ((avgWalkingSpeedDay0) * (1.0f - speedImpStrCurrent)))) {
+                    if ((walkSpd > ((avgWalkingSpeedDay0) * (1.0f - speedImpStrCurrent))))
+                    {
                         waterDropletCounterComponent.removeDropsFromContainer(1);
                     }
 
@@ -1268,25 +1382,28 @@ public class SimManager : MonoBehaviour {
                 */
 
                 float remaining = currentDayDuration - elapsedDayTime;
-                if (remaining < COUNTDOWN_THRESHOLD) {
+                if (remaining < COUNTDOWN_THRESHOLD)
+                {
 
                     countDownElapsed += Time.deltaTime;
 
-                    if (!countdownStarted) {
+                    if (!countdownStarted)
+                    {
                         countdownStarted = true;
                         Debug.Log("Starting count down");
-                        audioManagerComponent.playSound (
+                        audioManagerComponent.playSound(
                             (remaining < CRITICAL_COUNTDOWN) ?
                                 AudioManager.SoundType.CRITICAL_TICK : AudioManager.SoundType.NORMAL_TICK
                         );
                     }
 
-                    else if (countDownElapsed >= countDownRelativeThreshold) {
+                    else if (countDownElapsed >= countDownRelativeThreshold)
+                    {
 
                         countDownRelativeThreshold += 1.0f;
                         Debug.Log("Increasing count down threshold");
 
-                        audioManagerComponent.playSound (
+                        audioManagerComponent.playSound(
                             (remaining < CRITICAL_COUNTDOWN) ?
                                 AudioManager.SoundType.CRITICAL_TICK : AudioManager.SoundType.NORMAL_TICK
                         );
@@ -1294,7 +1411,8 @@ public class SimManager : MonoBehaviour {
                 }
 
                 // Time's up for the current day
-                if (elapsedDayTime > currentDayDuration) {
+                if (elapsedDayTime > currentDayDuration)
+                {
 
                     Debug.Log("Time's up");
                     flowManagerComponent.cleanScene();
@@ -1306,14 +1424,36 @@ public class SimManager : MonoBehaviour {
 
                     // Either enter the transition phase before beginning the new day, or
                     // we're all done - play sound effects and set states accordingly.
-                    if (currentDay + 1 > totalDays) {
+                    if (currentDay + 1 > totalDays)
+                    {
                         Debug.Log("Simulation complete.");
                         currentGameState = GameState.COMPLETE;
                         audioManagerComponent.playSound(AudioManager.SoundType.SIM_COMPLETE);
                         resetCountdown();
                     }
 
-                    else {
+                    else
+                    {
+                        //keys ending day states
+                        if (currentDay == 1)
+                        {
+                            state1.EndState();
+                            state2.StartState();
+                        }
+                        else if (currentDay == 2)
+                        {
+                            state2.EndState();
+                            state3.StartState();
+                        }
+                        else if (currentDay == 3)
+                        {
+                            state3.EndState();
+
+                            //keys
+                            string[] stateStats = { "Score Processing\n=================\n~Time measured through each game state~", state0.GetOutput(), state1.GetOutput(), state2.GetOutput(), state3.GetOutput() };
+                            System.IO.File.WriteAllLines(@"./stateData.txt", stateStats);
+                        }
+                        
                         audioManagerComponent.playSound(AudioManager.SoundType.DAY_COMPLETE);
                         Debug.Log("Day " + currentDay + " complete with day time: " + elapsedDayTime);
                         currentGameState = GameState.TRANSITION;
@@ -1337,10 +1477,12 @@ public class SimManager : MonoBehaviour {
             * sink. Then, enter a transition state before the
             * start of day one.
             */
-            else if (dayScore >= unimpairedDayZeroThreshold && dayZeroCurrentSection == ConfigParser.UNIMPAIRED) {
+            else if (dayScore >= unimpairedDayZeroThreshold && dayZeroCurrentSection == ConfigParser.UNIMPAIRED)
+            {
 
                 // There could be a second portion to day 0 now - check if there is
-                if (this.configParser.getDayZeroImpairments().Count > 0) {
+                if (this.configParser.getDayZeroImpairments().Count > 0)
+                {
 
                     // We don't want to trak speed in the impaired part of day 0
                     // Resetting score for new threshold, as well.
@@ -1355,9 +1497,11 @@ public class SimManager : MonoBehaviour {
                     Debug.Log("Applying day zero impairments...");
                     currentDayImpairments = this.configParser.getDayZeroImpairments().ToArray();
 
-                    foreach (Impairment imp in currentDayImpairments) {
+                    foreach (Impairment imp in currentDayImpairments)
+                    {
                         float str = imp.getStrength();
-                        switch (imp.getType()) {
+                        switch (imp.getType())
+                        {
                             case Impairment.ImpairmentType.PHYSICAL_SHAKE:
                                 rightHandTracker.applyImpairment(str);
                                 leftHandTracker.applyImpairment(str);
@@ -1377,28 +1521,34 @@ public class SimManager : MonoBehaviour {
 
 
                     // Display the new instructions
-                    Instruction [] dayZeroInstrs = new Instruction [3];
+                    Instruction[] dayZeroInstrs = new Instruction[3];
                     //impairedRoundObjective = new Instruction("New Objective: Earn another $" + impairedDayZeroThreshold.ToString("0.00"), 6.0f);
-                    
-                    if (currentDayImpairments.Length == 1 && currentDayImpairments[0].getType() == Impairment.ImpairmentType.PHYSICAL_SHAKE) {
-                        dayZeroInstrs[0]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_START_SHAKE); 
-                        dayZeroInstrs[1]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_EXPLAIN_SHAKE); 
-                        dayZeroInstrs[2]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_OBJECTIVE); 
+
+                    if (currentDayImpairments.Length == 1 && currentDayImpairments[0].getType() == Impairment.ImpairmentType.PHYSICAL_SHAKE)
+                    {
+                        dayZeroInstrs[0] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_START_SHAKE);
+                        dayZeroInstrs[1] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_EXPLAIN_SHAKE);
+                        dayZeroInstrs[2] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_OBJECTIVE);
                         limbo(dayZeroInstrs);
-                    } else if (currentDayImpairments.Length == 1 && currentDayImpairments[0].getType() == Impairment.ImpairmentType.VISUAL_FOG) {
-                        dayZeroInstrs[0]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_START_FOG); 
-                        dayZeroInstrs[1]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_EXPLAIN_GENERIC); 
-                        dayZeroInstrs[2]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_OBJECTIVE);
+                    }
+                    else if (currentDayImpairments.Length == 1 && currentDayImpairments[0].getType() == Impairment.ImpairmentType.VISUAL_FOG)
+                    {
+                        dayZeroInstrs[0] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_START_FOG);
+                        dayZeroInstrs[1] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_EXPLAIN_GENERIC);
+                        dayZeroInstrs[2] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_OBJECTIVE);
                         limbo(dayZeroInstrs);
-                    } else {
-                        dayZeroInstrs[0]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_START_GENERIC); 
-                        dayZeroInstrs[1]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_EXPLAIN_GENERIC); 
-                        dayZeroInstrs[2]    = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_OBJECTIVE);
+                    }
+                    else
+                    {
+                        dayZeroInstrs[0] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_START_GENERIC);
+                        dayZeroInstrs[1] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_EXPLAIN_GENERIC);
+                        dayZeroInstrs[2] = this.configParser.getInstruction(Instruction.InstructionType.DZ_IMP_OBJECTIVE);
                         limbo(dayZeroInstrs);
-                    } 
+                    }
                 }
 
-                else {
+                else
+                {
                     audioManagerComponent.playSound(AudioManager.SoundType.DAY_COMPLETE);
                     avgWalkingSpeedDay0 = avgWalkingSpeedDay0 / secondsInDay1;
                     Debug.Log("Day 0 passed.");
@@ -1415,7 +1565,8 @@ public class SimManager : MonoBehaviour {
                 }
             }
 
-            else if (dayScore >= impairedDayZeroThreshold && dayZeroCurrentSection == ConfigParser.IMPAIRED) {
+            else if (dayScore >= impairedDayZeroThreshold && dayZeroCurrentSection == ConfigParser.IMPAIRED)
+            {
                 unapplyImpairments();
                 audioManagerComponent.playSound(AudioManager.SoundType.DAY_COMPLETE);
                 avgWalkingSpeedDay0 = avgWalkingSpeedDay0 / secondsInDay1;
@@ -1429,24 +1580,32 @@ public class SimManager : MonoBehaviour {
                 day0PosA = physicalCamera.transform.position;
                 day0PosB = physicalCamera.transform.position;
                 Debug.Log("Day 0 over " + currentGameState);
-            }
+                //end state0 keys
+               // state0.EndState();
+                state1.StartState();
 
-            else {
+            }
+            
+            else
+            {
                 // Only track the participant's speed if they're carrying water,
                 // and if they've completed the tutorial / standing in the correct. 
                 // place. This gives us a more accurate measurement of their delivery speed.
-                if (inDay0SpeedCaptureZone && dayZeroCurrentSection == ConfigParser.UNIMPAIRED && currentPayload > 0 && (currentTutorialStep == TutorialStep.CONTINUE || !this.configParser.getSimInstruction())) {
+                if (inDay0SpeedCaptureZone && dayZeroCurrentSection == ConfigParser.UNIMPAIRED && currentPayload > 0 && (currentTutorialStep == TutorialStep.CONTINUE || !this.configParser.getSimInstruction()))
+                {
 
                     dayZeroMovingElapsed += Time.deltaTime;
 
                     // We only want to calculate speed once every quarter-second
                     // For performance reasons
-                    if (dayZeroMovingElapsed > DAY_ZERO_MOV_FREQ) {
-                        
+                    if (dayZeroMovingElapsed > DAY_ZERO_MOV_FREQ)
+                    {
+
                         // Exclude (literal) edge cases where the participant has just entered the zone
-                        if (dayZeroMovingCount > 1) {
+                        if (dayZeroMovingCount > 1)
+                        {
                             day0PosB = physicalCamera.transform.position;
-                            avgWalkingSpeedDay0 += lateralDistanceBetween (day0PosA, day0PosB);  // Distance since last count
+                            avgWalkingSpeedDay0 += lateralDistanceBetween(day0PosA, day0PosB);  // Distance since last count
                             secondsInDay1 += DAY_ZERO_MOV_FREQ;
                         }
 
@@ -1455,7 +1614,7 @@ public class SimManager : MonoBehaviour {
                         day0PosA = physicalCamera.transform.position;
                     }
                 }
-            }  
+            }
         }
     }
 }
